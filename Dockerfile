@@ -1,7 +1,7 @@
 # ==========================================
 # STAGE 1: Build Stage (Maven + JDK 25, sesuai java.version di pom.xml)
 # ==========================================
-FROM maven:3.9-eclipse-temurin-25 AS builder
+FROM maven:3.9-eclipse-temurin-26 AS builder
 
 WORKDIR /app
 
