@@ -42,7 +42,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mapstruct.version>1.6.3</mapstruct.version>
         <bouncycastle.version>1.86</bouncycastle.version>
-        <poi.version>5.5.1</poi.version>
+        <poi.version>6.0.0</poi.version>
     </properties>
 
     <dependencies>
