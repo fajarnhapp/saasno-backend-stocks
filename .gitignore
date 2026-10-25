@@ -1,0 +1,47 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+/bin/
+### Secrets / local config ###
+# startup.sh membuat .env sementara untuk docker compose; jangan pernah di-commit
+.env
+.env.*
+# Override lokal untuk kredensial (SMTP, dll): Spring Boot otomatis memuat ./application.properties atau ./config/application.properties
+# dari folder tempat aplikasi dijalankan, dan nilainya menimpa src/main/resources/application.properties
+/application.properties
+/config/
+application-local.properties
+application-local.yml
+
+### Uploads (foto profil, logo, unduhan; lihat app.upload.dir) ###
+/uploads/

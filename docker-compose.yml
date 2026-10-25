@@ -1,0 +1,65 @@
+services:
+  saasno-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/fajarnhapp/saasno-backend:${IMAGE_TAG:-latest}
+    container_name: saasno-backend
+    restart: always
+    volumes:
+      # Volume log dipertahankan agar log tidak hilang saat container restart. Path harus sama dengan LOG_PATH di logback.xml
+      # (dibaca juga oleh Alloy untuk dikirim ke Loki/Grafana).
+      - /home/application/data/logs/com/saasno:/home/application/data/logs/com/saasno
+      # Foto profil, logo, dan file unduhan disimpan di ./uploads (app.upload.dir); tanpa volume ini hilang saat container dibuat ulang
+      - saasno-uploads:/home/application/data/apps/saasno-backend/uploads
+    expose:
+      # Port aplikasi (server.port=8000); frontend memanggil http://saasno-backend:8000 lewat jaringan saasno-backend.
+      - "8000"
+    networks:
+      - saasno-backend
+      # Jaringan bersama Prometheus (monitoring): Prometheus membaca metrik di saasno-backend:8081 lewat jaringan ini.
+      - fajarnhapp-prometheus
+    environment:
+      SAASNO_DATABASE_URL: ${SAASNO_DATABASE_URL}
+      SAASNO_DATABASE_USERNAME: ${SAASNO_DATABASE_USERNAME}
+      SAASNO_DATABASE_PASSWORD: ${SAASNO_DATABASE_PASSWORD}
+      SAASNO_RABBITMQ_HOST: ${SAASNO_RABBITMQ_HOST}
+      SAASNO_RABBITMQ_USERNAME: ${SAASNO_RABBITMQ_USERNAME}
+      SAASNO_RABBITMQ_PASSWORD: ${SAASNO_RABBITMQ_PASSWORD}
+      SAASNO_REDIS_HOST: ${SAASNO_REDIS_HOST}
+      SAASNO_REDIS_PASSWORD: ${SAASNO_REDIS_PASSWORD}
+      SAASNO_MONGODB_URI: ${SAASNO_MONGODB_URI}
+      # Server SMTP dan pengirim email (MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_AUTH, MAIL_STARTTLS, MAIL_FROM,
+      # MAIL_FROM_NAME) diatur di menu Konfigurasi, bukan di sini.
+      SAASNO_API_DOCS_ENABLED: ${SAASNO_API_DOCS_ENABLED:-false}
+      # Metrics port (8081) is not published to the host; 0.0.0.0 lets Prometheus reach it from a shared Docker network.
+      SAASNO_MANAGEMENT_ADDRESS: 0.0.0.0
+      SPRING_LOGGING_PATH: /home/application/data/logs/com/saasno
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=70.0
+        -XX:InitialRAMPercentage=25.0
+        -XX:MinRAMPercentage=25.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=100
+    mem_limit: 4096m
+    cpus: 2
+    healthcheck:
+      # 200 hanya jika PostgreSQL, Redis, MongoDB dan RabbitMQ semuanya UP. Port mengikuti SERVER_PORT (bawaan aplikasi: 8000).
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${SERVER_PORT:-8000}/api/public/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  saasno-uploads:
+
+networks:
+  saasno-backend:
+    name: saasno-backend
+    external: true
+  # Dibuat oleh startup.sh, oleh ../prometheus/startup.sh, atau oleh langkah deploy di workflow.
+  fajarnhapp-prometheus:
+    name: fajarnhapp-prometheus
+    external: true
